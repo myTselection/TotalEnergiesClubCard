@@ -26,8 +26,8 @@ _DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.0%z"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required("cardnumber"): cv.string,
-        vol.Required("password"): cv.string
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string
     }
 )
 
@@ -36,8 +36,6 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 
 async def dry_setup(hass, config_entry, async_add_devices):
     config = config_entry
-    username = config.get("cardnumber")
-    password = config.get("password")
 
     check_settings(config, hass)
     sensors = []
@@ -88,8 +86,8 @@ class ComponentData:
         self._config = config
         self._hass = hass
         self._session = ComponentSession()
-        self._cardnumber = config.get("cardnumber")
-        self._password = config.get("password")
+        self._cardnumber = config.get(CONF_USERNAME)
+        self._password = config.get(CONF_PASSWORD)
         self._details = None
 
         
@@ -103,6 +101,8 @@ class ComponentData:
             _LOGGER.debug("Starting with session for " + NAME)
             self._details = await self._hass.async_add_executor_job(lambda: self._session.login(self._cardnumber, self._password))
             _LOGGER.debug("login completed " + NAME)
+            self._transactions = await self._hass.async_add_executor_job(lambda: self._session.transactions())
+            _LOGGER.debug(f"transactions completed {NAME}, transactions: {self._transactions}")
 
         else:
             _LOGGER.debug(f"{NAME} no session available")
@@ -127,9 +127,17 @@ class ComponentData:
 class ComponentPointsSensor(Entity):
     def __init__(self, data):
         self._data = data
-        self._last_update =  self._data.get('last_update')
-        self._points = self._data.get('points')
-        self._cardNb = self._data.get('noCarte')
+        self._details = data._details
+        self._last_update =  self._details.get('last_update')
+        self._points = int(self._details.get('points'))
+        self._cardNb = self._data._cardnumber
+        # Calculate the number of fuel cards of each value
+        self._cards_25_points = 950
+        self._cards_15_points = 580
+        self._cards_25 = self._points // 950
+        remaining_points = self._points % 950
+        self._cards_15 = remaining_points // 580
+
 
     @property
     def state(self):
@@ -138,15 +146,20 @@ class ComponentPointsSensor(Entity):
 
     async def async_update(self):
         await self._data.update()
-        self._last_update =  self._data.get('last_update')
-        self._points = self._data.get('points')
-        self._cardNb = self._data.get('noCarte')
+        self._last_update =  self._details.get('last_update')
+        self._points = int(self._details.get('points'))
+        self._cardNb = self._data._cardnumber
+        # Calculate the number of fuel cards of each value
+        self._cards_25 = self._points // 950
+        remaining_points = self._points % 950
+        self._cards_15 = remaining_points // 580
+
             
         
     async def async_will_remove_from_hass(self):
         """Clean up after entity before removal."""
         _LOGGER.info("async_will_remove_from_hass " + NAME)
-        self._data.clear_session()
+        self._details.clear_session()
 
 
     @property
@@ -171,6 +184,7 @@ class ComponentPointsSensor(Entity):
             ATTR_ATTRIBUTION: NAME,
             "last update": self._last_update,
             "points": self._points,
+            "happy_fuel_card": f"Eligible Card 25€: {self._cards_25} ({self._cards_25_points} points), Card 15€: {self._cards_15} ({self._cards_15_points}  points)",
             "card_nr": self._cardNb
         }
 
@@ -205,9 +219,11 @@ class ComponentPointsSensor(Entity):
 class ComponentAssistanceSensor(Entity):
     def __init__(self, data):
         self._data = data
-        self._last_update =  self._data.get('last_update')
-        self._assistance = self._data.get('dtFinAssistance')
-        self._cardNb = self._data.get('noCarte')
+        self._details = data._details
+        self._last_update =  self._details.get('last_update')
+        self._assistance = self._details.get('dtFinAssistance')
+        self._cardNb = self._data._cardnumber
+
 
     @property
     def state(self):
@@ -216,15 +232,16 @@ class ComponentAssistanceSensor(Entity):
 
     async def async_update(self):
         await self._data.update()
-        self._last_update =  self._data.get('last_update')
-        self._assistance = self._data.get('dtFinAssistance')
-        self._cardNb = self._data.get('noCarte')
+        self._last_update =  self._details.get('last_update')
+        self._assistance = self._details.get('dtFinAssistance')
+        self._cardNb = self._data._cardnumber
+
             
         
     async def async_will_remove_from_hass(self):
         """Clean up after entity before removal."""
         _LOGGER.info("async_will_remove_from_hass " + NAME)
-        self._data.clear_session()
+        self._details.clear_session()
 
 
     @property

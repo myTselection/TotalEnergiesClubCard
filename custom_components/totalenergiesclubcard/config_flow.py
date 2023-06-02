@@ -59,7 +59,6 @@ class ComponentFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
 
         if user_input is not None:
-            await self.test_setup(user_input)
             return self.async_create_entry(title=NAME, data=user_input)
 
         return await self._show_config_form(user_input)

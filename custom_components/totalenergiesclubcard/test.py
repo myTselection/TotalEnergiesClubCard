@@ -2,6 +2,7 @@
 import logging
 import requests
 import urllib.parse
+# import json
 from bs4 import BeautifulSoup
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,6 +75,39 @@ class ComponentSession(object):
 
         # assert response.status_code == 200
 
+        
+    def transactions(self):
+        response = self.s.get("https://club.totalenergies.be/adherent_transactions/transactions.php?PAYS=BE&LG=NL",timeout=30,allow_redirects=True)
+        
+        _LOGGER.debug("get result status code: " + str(response.status_code))
+        _LOGGER.debug("get result response: " + str(response.text))
+        _LOGGER.debug("get result cookies: " + str(self.s.cookies))
+        
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        transactions = []
+        table = soup.find('table')
+        rows = table.find_all('tr')
+
+        for row in rows:
+            columns = row.find_all('td')
+            if len(columns) == 4:
+                # date_station = columns[0].split('<br/>').text.strip()
+                # _LOGGER.debug(f"date_station: {date_station}")
+                transaction = {
+                    'date': columns[0].contents[0],
+                    'station': columns[0].contents[2],
+                    'subject': columns[1].text.strip(),
+                    'debit': int(columns[2].text.strip()),
+                    'credit': int(columns[3].text.strip())
+                }
+                transactions.append(transaction)
+
+        # result = {'transactions': transactions}
+        # print(json_data = json.dumps(transactions, indent=4))
+        return transactions
+
 cs = ComponentSession()
-cs.login("XXXXXXXXXX", "XXXX")
+cs.login("XXXXXXXX", "XXX")
 # cs.userdetails()
+cs.transactions()

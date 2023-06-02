@@ -41,9 +41,11 @@ class ComponentSession(object):
             "menucourant": "adherent",
             "codeCategorie": ""
         }
+        _LOGGER.debug(f"post data: {data}")
         response = self.s.post("https://club.totalenergies.be/authentification/authentification.php?PAYS=BE&LG=NL",data=data,timeout=30,allow_redirects=False)
         _LOGGER.debug("post result status code: " + str(response.status_code))
         _LOGGER.debug("post result response: " + str(response.text))
+        _LOGGER.debug("post result cookies: " + str(self.s.cookies))
         
         clubCookie = self.s.cookies.get('club')
         clubCookie = urllib.parse.unquote(clubCookie)
@@ -63,5 +65,33 @@ class ComponentSession(object):
             "last_update": datetime.now()
         }
         return details
-        
 
+    def transactions(self):
+        response = self.s.get("https://club.totalenergies.be/adherent_transactions/transactions.php?PAYS=BE&LG=NL",timeout=30,allow_redirects=True)
+        
+        _LOGGER.debug("get result status code: " + str(response.status_code))
+        _LOGGER.debug("get result response: " + str(response.text))
+        _LOGGER.debug("get result cookies: " + str(self.s.cookies))
+        
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        transactions = []
+        table = soup.find('table')
+        rows = table.find_all('tr')
+
+        for row in rows:
+            columns = row.find_all('td')
+            if len(columns) == 4 and len(columns[0].contents) >= 2:
+                transaction = {
+                    'date': columns[0].contents[0],
+                    'station': columns[0].contents[2],
+                    'subject': columns[1].text.strip(),
+                    'debit': int(columns[2].text.strip()),
+                    'credit': int(columns[3].text.strip())
+                }
+                transactions.append(transaction)
+
+        # result = {'transactions': transactions}
+        # print(json_data = json.dumps(transactions, indent=4))
+        return transactions
+        
