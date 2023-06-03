@@ -51,7 +51,9 @@ async def dry_setup(hass, config_entry, async_add_devices):
     sensors.append(sensorPoints)
     sensorAssistance = ComponentAssistanceSensor(componentData)
     sensors.append(sensorAssistance)
-    
+    sensorTransactions = ComponentTransactionsSensor(componentData)
+    sensors.append(sensorTransactions)
+
     async_add_devices(sensors)
 
 
@@ -80,6 +82,19 @@ async def async_remove_entry(hass, config_entry):
     except ValueError:
         pass
         
+
+def convert_string_to_date(string_date):
+    day, month, year = map(int, string_date.split('/'))
+    return date(year, month, day)
+
+def convert_string_to_date_yyyy_mm_dd(string_date):
+    year, month, day = map(int, string_date.split('/'))
+    return date(year, month, day)
+
+def calculate_days_remaining(target_date):
+    today = date.today()
+    remaining_days = (target_date - today).days
+    return remaining_days
 
 class ComponentData:
     def __init__(self, config, hass):
@@ -223,21 +238,24 @@ class ComponentAssistanceSensor(Entity):
         self._last_update =  self._details.get('last_update')
         self._assistance = self._details.get('dtFinAssistance')
         self._cardNb = self._data._cardnumber
+        self._assistance_coverage_date = convert_string_to_date(self._assistance)
+        self._remaining_days = calculate_days_remaining(self._assistance_coverage_date)
 
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._assistance
+        return  self._remaining_days
 
     async def async_update(self):
         await self._data.update()
         self._last_update =  self._details.get('last_update')
         self._assistance = self._details.get('dtFinAssistance')
         self._cardNb = self._data._cardnumber
-
-            
+        self._assistance_coverage_date = convert_string_to_date(self._assistance)
+        self._remaining_days = calculate_days_remaining(self._assistance_coverage_date)
         
+
     async def async_will_remove_from_hass(self):
         """Clean up after entity before removal."""
         _LOGGER.info("async_will_remove_from_hass " + NAME)
@@ -265,7 +283,96 @@ class ComponentAssistanceSensor(Entity):
         return {
             ATTR_ATTRIBUTION: NAME,
             "last update": self._last_update,
-            "assistance": self._assistance,
+            "assistance_coverage": self._assistance_coverage_date,
+            "remaining_days": self._remaining_days,
+            "card_nr": self._cardNb
+        }
+
+    @property
+    def device_info(self) -> dict:
+        """I can't remember why this was needed :D"""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": DOMAIN,
+        }
+
+    @property
+    def unit(self) -> int:
+        """Unit"""
+        return int
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement this sensor expresses itself in."""
+        return "days"
+        
+    @property
+    def device_class(self):
+        return SensorDeviceClass.DURATION
+
+    @property
+    def friendly_name(self) -> str:
+        return self.unique_id
+
+class ComponentTransactionsSensor(Entity):
+    def __init__(self, data):
+        self._data = data
+        self._details = data._details
+        self._transactions = data._transactions
+        self._last_update =  self._details.get('last_update')
+        self._assistance = self._details.get('dtFinAssistance')
+        self._assistance_coverage_date = convert_string_to_date(self._assistance)
+        self._cardNb = self._data._cardnumber
+        _LOGGER.debug(f"transaction date: {self._transactions[0].get('date')}")
+        self._lastTransactionDate = convert_string_to_date_yyyy_mm_dd(self._transactions[0].get('date'))
+
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._lastTransactionDate
+
+    async def async_update(self):
+        await self._data.update()
+        self._last_update =  self._details.get('last_update')
+        self._assistance = self._details.get('dtFinAssistance')
+        self._assistance_coverage_date = convert_string_to_date(self._assistance)
+        self._cardNb = self._data._cardnumber
+        self._lastTransactionDate = convert_string_to_date_yyyy_mm_dd(self._transactions[0].get('date'))
+
+            
+        
+    async def async_will_remove_from_hass(self):
+        """Clean up after entity before removal."""
+        _LOGGER.info("async_will_remove_from_hass " + NAME)
+        self._details.clear_session()
+
+
+    @property
+    def icon(self) -> str:
+        """Shows the correct icon for container."""
+        return "mdi:gas-station"
+        
+    @property
+    def unique_id(self) -> str:
+        """Return the name of the sensor."""
+        name = f"{NAME} Transactions {self._cardNb}"
+        return (name)
+
+    @property
+    def name(self) -> str:
+        return self.unique_id
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        """Return the state attributes."""
+        return {
+            ATTR_ATTRIBUTION: NAME,
+            "last update": self._last_update,
+            "assistance_coverage": self._assistance_coverage_date,
+            "last_transaction_date": self._lastTransactionDate,
+            "transactions": self._transactions,
             "card_nr": self._cardNb
         }
 
