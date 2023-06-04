@@ -397,7 +397,7 @@ class ComponentTransactionsSensor(Entity):
         
     @property
     def device_class(self):
-        return SensorDeviceClass.DURATION
+        return SensorDeviceClass.TIMESTAMP
 
     @property
     def friendly_name(self) -> str:
