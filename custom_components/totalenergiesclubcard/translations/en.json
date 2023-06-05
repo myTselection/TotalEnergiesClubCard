@@ -3,10 +3,18 @@
         "title": "TotalEnergies Club Card",
         "step": {
             "user": {
-                "description": "Setup TotalEnergies Club Card."
+                "description": "Setup TotalEnergies Club Card.",
+                "data": {
+                    "username": "Cardnumber",
+                    "password": "PIN"
+                }
             },
             "edit": {
-                "description": "Setup TotalEnergies Club Card."
+                "description": "Setup TotalEnergies Club Card.",
+                "data": {
+                    "username": "Cardnumber",
+                    "password": "PIN"
+                }
             }
 
         },
@@ -17,7 +25,11 @@
     "options": {
         "step": {
             "edit": {
-                "description": "Setup TotalEnergies Club Card."
+                "description": "Setup TotalEnergies Club Card.",
+                "data": {
+                    "username": "Cardnumber",
+                    "password": "PIN"
+                }
             }
         },
         "error": {
