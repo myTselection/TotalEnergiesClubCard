@@ -105,7 +105,10 @@ class ComponentData:
         self._password = config.get(CONF_PASSWORD)
         self._details = None
 
-        
+    @property
+    def unique_id(self):
+        return f"{DOMAIN}-{self._cardnumber}"
+
     # same as update, but without throttle to make sure init is always executed
     async def _forced_update(self):
         _LOGGER.info("Fetching init stuff for " + NAME)
@@ -122,7 +125,6 @@ class ComponentData:
         else:
             _LOGGER.debug(f"{NAME} no session available")
 
-                
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def _update(self):
         await self._forced_update()
@@ -133,11 +135,9 @@ class ComponentData:
             await self._forced_update()
         else:
             await self._update()
-    
+
     def clear_session(self):
         self._session : None
-
-
 
 class ComponentPointsSensor(Entity):
     def __init__(self, data):
@@ -152,7 +152,6 @@ class ComponentPointsSensor(Entity):
         self._cards_25 = self._points // 950
         remaining_points = self._points % 950
         self._cards_15 = remaining_points // 580
-
 
     @property
     def state(self):
@@ -169,28 +168,25 @@ class ComponentPointsSensor(Entity):
         remaining_points = self._points % 950
         self._cards_15 = remaining_points // 580
 
-            
-        
     async def async_will_remove_from_hass(self):
         """Clean up after entity before removal."""
         _LOGGER.info("async_will_remove_from_hass " + NAME)
         self._details.clear_session()
 
-
     @property
     def icon(self) -> str:
         """Shows the correct icon for container."""
         return "mdi:gas-station"
-        
+
     @property
     def unique_id(self) -> str:
-        """Return the name of the sensor."""
-        name = f"{NAME} Points {self._cardNb}"
-        return (name)
+        """Return the unique ID of the sensor."""
+        return f"{self._data.unique_id}-points"
 
     @property
     def name(self) -> str:
-        return self.unique_id
+        """Return the name of the sensor."""
+        return f"{NAME} Points {self._cardNb}"
 
     @property
     def extra_state_attributes(self) -> dict:
@@ -205,10 +201,10 @@ class ComponentPointsSensor(Entity):
 
     @property
     def device_info(self) -> dict:
-        """I can't remember why this was needed :D"""
+        """Device info dictionary."""
         return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
+            "identifiers": {(DOMAIN, self._data.unique_id)},
+            "name": f"{NAME} {self._cardNb}",
             "manufacturer": DOMAIN,
         }
 
@@ -221,7 +217,7 @@ class ComponentPointsSensor(Entity):
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement this sensor expresses itself in."""
         return "points"
-        
+
     @property
     def device_class(self):
         return SensorDeviceClass.MONETARY
@@ -241,7 +237,6 @@ class ComponentAssistanceSensor(Entity):
         self._assistance_coverage_date = convert_string_to_date(self._assistance)
         self._remaining_days = calculate_days_remaining(self._assistance_coverage_date)
 
-
     @property
     def state(self):
         """Return the state of the sensor."""
@@ -254,28 +249,26 @@ class ComponentAssistanceSensor(Entity):
         self._cardNb = self._data._cardnumber
         self._assistance_coverage_date = convert_string_to_date(self._assistance)
         self._remaining_days = calculate_days_remaining(self._assistance_coverage_date)
-        
 
     async def async_will_remove_from_hass(self):
         """Clean up after entity before removal."""
         _LOGGER.info("async_will_remove_from_hass " + NAME)
         self._details.clear_session()
 
-
     @property
     def icon(self) -> str:
         """Shows the correct icon for container."""
         return "mdi:gas-station"
-        
+
     @property
     def unique_id(self) -> str:
-        """Return the name of the sensor."""
-        name = f"{NAME} Assistance {self._cardNb}"
-        return (name)
+        """Return the unique ID of the sensor."""
+        return f"{self._data.unique_id}-assistance"
 
     @property
     def name(self) -> str:
-        return self.unique_id
+        """Return the name of the sensor."""
+        return f"{NAME} Assistance {self._cardNb}"
 
     @property
     def extra_state_attributes(self) -> dict:
@@ -290,10 +283,10 @@ class ComponentAssistanceSensor(Entity):
 
     @property
     def device_info(self) -> dict:
-        """I can't remember why this was needed :D"""
+        """Device info dictionary."""
         return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
+            "identifiers": {(DOMAIN, self._data.unique_id)},
+            "name": f"{NAME} {self._cardNb}",
             "manufacturer": DOMAIN,
         }
 
@@ -306,7 +299,7 @@ class ComponentAssistanceSensor(Entity):
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement this sensor expresses itself in."""
         return "days"
-        
+
     @property
     def device_class(self):
         return SensorDeviceClass.DURATION
@@ -327,7 +320,6 @@ class ComponentTransactionsSensor(Entity):
         _LOGGER.debug(f"transaction date: {self._transactions[0].get('date')}")
         self._lastTransactionDate = convert_string_to_date_yyyy_mm_dd(self._transactions[0].get('date'))
 
-
     @property
     def state(self):
         """Return the state of the sensor."""
@@ -341,28 +333,25 @@ class ComponentTransactionsSensor(Entity):
         self._cardNb = self._data._cardnumber
         self._lastTransactionDate = convert_string_to_date_yyyy_mm_dd(self._transactions[0].get('date'))
 
-            
-        
     async def async_will_remove_from_hass(self):
         """Clean up after entity before removal."""
         _LOGGER.info("async_will_remove_from_hass " + NAME)
         self._details.clear_session()
 
-
     @property
     def icon(self) -> str:
         """Shows the correct icon for container."""
         return "mdi:gas-station"
-        
+
     @property
     def unique_id(self) -> str:
-        """Return the name of the sensor."""
-        name = f"{NAME} Transactions {self._cardNb}"
-        return (name)
+        """Return the unique ID of the sensor."""
+        return f"{self._data.unique_id}-transactions"
 
     @property
     def name(self) -> str:
-        return self.unique_id
+        """Return the name of the sensor."""
+        return f"{NAME} Transactions {self._cardNb}"
 
     @property
     def extra_state_attributes(self) -> dict:
@@ -378,10 +367,10 @@ class ComponentTransactionsSensor(Entity):
 
     @property
     def device_info(self) -> dict:
-        """I can't remember why this was needed :D"""
+        """Device info dictionary."""
         return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
+            "identifiers": {(DOMAIN, self._data.unique_id)},
+            "name": f"{NAME} {self._cardNb}",
             "manufacturer": DOMAIN,
         }
 
@@ -394,7 +383,7 @@ class ComponentTransactionsSensor(Entity):
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement this sensor expresses itself in."""
         return "date"
-        
+
     @property
     def device_class(self):
         return SensorDeviceClass.TIMESTAMP
