@@ -22,6 +22,38 @@ This integration is in no way affiliated with TotalEnergies.
 
 
 ## Integration
+Device `TotalEnergies Club Card [cardnumber]` should become available with the following sensors:
+- <details><summary><code>TotalEnergies Club Card Assistance [cardnr]</code> with indication of number of days the TotalEnergies Assistance is still available</summary>
+
+	| Attribute | Description |
+	| --------- | ----------- |
+	| State     | Number of days the assistance coverage is valid |
+	| `Assistance coverage `   | Date till when the assistance coverage will remain available |
+	| `remaining days`   | Same as state |
+	| `Card nr`   | Card number |
+
+	</details>
+- <details><summary><code>TotalEnergies Club Card Points [cardnr]</code> with number of points available on the TotalEnergies Club Card</summary>
+
+	| Attribute | Description |
+	| --------- | ----------- |
+	| State     | Nr of points on TotalEngergies Club Card |
+	| `Happy fuel card` | Indication of number of cards of 25€ and 15€ can be ordered with number of available points |
+	| `Card nr`   | Card number |
+	
+	</details>
+  
+- <details><summary><code>TotalEnergies Club Card Transactions [cardnr]</code> with details on the last 10 transactions</summary>
+
+	| Attribute | Description |
+	| --------- | ----------- |
+	| State     | Date of last transaction executed with the Club card |
+	| `Assistance coverage` | Date till when the assistance coverage will remain available |
+  | `Last transaction date` | Same a state |
+  | `Transactions` | JSON with details of last transactions: date, location, number of points credited or debited |
+	| `Card nr`   | Card number |
+	
+	</details>
 
 ## Status
 Still some optimisations are planned, see [Issues](https://github.com/myTselection/TotalEnergiesClubCard/issues) section in GitHub.
@@ -42,3 +74,19 @@ logger:
 ```
 
 ## Example usage
+
+<details><summary>Click to show the Mardown example</summary>
+
+```
+type: markdown
+  content: >-
+    {{states('sensor.totalenergies_club_card_assistance_[cardnr]')}} days
+    Total Assistance coverage, till
+    {{state_attr('sensor.totalenergies_club_card_assistance_[cardnr]','assistance_coverage')
+    | as_timestamp| timestamp_custom("%a %d-%m-%Y")}}
+
+    Points {{states('sensor.totalenergies_club_card_points_[cardnr]')}},
+    {{state_attr('sensor.totalenergies_club_card_points_[cardnr]','happy_fuel_card')}}
+  
+```
+</details>
