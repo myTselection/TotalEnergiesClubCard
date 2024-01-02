@@ -9,7 +9,7 @@
 # TotalEnergies Club card Home Assistant integration
 [TotalEnergies Club card](https://services.totalenergies.be/nl/promoties/de-club-haal-het-meest-uit-uw-bezoek-onze-tankstations) Home Assistant custom component integration for Belgium. This custom component has been built from the ground up to bring TotalEnergies Club card site data into Home Assistant sensors in order to follow up on club card points and free road assist coverage period. This integration is built against the public website provided by TotalEnergies for Belgium and has not been tested for any other countries.
 
-This integration is in no way affiliated with TotalEnergies.
+This integration is in no way affiliated with TotalEnergies. **Please don't report issues with this integration to TotalEnergies, they will not be able to support you.**
 
 <p align="center"><img src="https://raw.githubusercontent.com/myTselection/TotalEnergiesClubCard/master/icon.png"/></p>
 
