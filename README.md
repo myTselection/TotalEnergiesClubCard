@@ -12,8 +12,8 @@
 This integration is in no way affiliated with TotalEnergies. 
 
 
-| :warning: Please don't report issues with this integration to TotalEnergies, they will not be able to support you.** |
-| ---------------------------------------------------------------------------------------------------------------------|
+| :warning: Please don't report issues with this integration to TotalEnergies, they will not be able to support you. |
+| -------------------------------------------------------------------------------------------------------------------|
 
 <p align="center"><img src="https://raw.githubusercontent.com/myTselection/TotalEnergiesClubCard/master/icon.png"/></p>
 
