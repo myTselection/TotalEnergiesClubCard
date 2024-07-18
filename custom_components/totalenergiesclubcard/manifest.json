@@ -9,5 +9,5 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/myTselection/TotalEnergiesClubCard/issues",
   "requirements": ["bs4","requests"],
-  "version": "1.2.3"
+  "version": "1.2.4"
 }
